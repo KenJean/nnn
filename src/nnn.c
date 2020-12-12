@@ -3380,76 +3380,22 @@ static char *unescape(const char *str, uint_t maxcols)
 
 static char *coolsize(off_t size)
 {
-	const char * const U = "BKMGTPEZY";
-	static char size_buf[12]; /* Buffer to hold human readable size */
-	off_t rem = 0;
-	size_t ret;
-	int i = 0;
+    int c;
+    char buf[16];
+	static char size_buf[16];
+    char *p, *out;
 
-	while (size >= 1024) {
-		rem = size & (0x3FF); /* 1024 - 1 = 0x3FF */
-		size >>= 10;
-		++i;
-	}
-
-	if (i == 1) {
-		rem = (rem * 1000) >> 10;
-
-		rem /= 10;
-		if (rem % 10 >= 5) {
-			rem = (rem / 10) + 1;
-			if (rem == 10) {
-				++size;
-				rem = 0;
-			}
-		} else
-			rem /= 10;
-	} else if (i == 2) {
-		rem = (rem * 1000) >> 10;
-
-		if (rem % 10 >= 5) {
-			rem = (rem / 10) + 1;
-			if (rem == 100) {
-				++size;
-				rem = 0;
-			}
-		} else
-			rem /= 10;
-	} else if (i > 0) {
-		rem = (rem * 10000) >> 10;
-
-		if (rem % 10 >= 5) {
-			rem = (rem / 10) + 1;
-			if (rem == 1000) {
-				++size;
-				rem = 0;
-			}
-		} else
-			rem /= 10;
-	}
-
-	if (i > 0 && i < 6 && rem) {
-		ret = xstrsncpy(size_buf, xitoa(size), 12);
-		size_buf[ret - 1] = '.';
-
-		char *frac = xitoa(rem);
-		size_t toprint = i > 3 ? 3 : i;
-		size_t len = xstrlen(frac);
-
-		if (len < toprint) {
-			size_buf[ret] = size_buf[ret + 1] = size_buf[ret + 2] = '0';
-			xstrsncpy(size_buf + ret + (toprint - len), frac, len + 1);
-		} else
-			xstrsncpy(size_buf + ret, frac, toprint + 1);
-
-		ret += toprint;
-	} else {
-		ret = xstrsncpy(size_buf, size ? xitoa(size) : "0", 12);
-		--ret;
-	}
-
-	size_buf[ret] = U[i];
-	size_buf[ret + 1] = '\0';
+    out = size_buf;
+    sprintf(buf, "%ld", size);
+    c = 2 - strlen(buf) % 3;
+    for (p = buf; *p != 0; p++) {
+       *out++ = *p;
+       if (c == 1) {
+           *out++ = ',';
+       }
+       c = (c + 1) % 3;
+    }
+    *--out = 0;
 
 	return size_buf;
 }
@@ -3735,7 +3681,7 @@ static void printent_long(const struct entry *ent, uint_t namecols, bool sel)
 		}
 
 		size = coolsize(cfg.blkorder ? ent->blocks << blk_shift : ent->size);
-		len = 10 - (uint_t)xstrlen(size);
+		len = 16 - (uint_t)xstrlen(size);
 		while (--len)
 			addch(' ');
 		addstr(size);
@@ -3772,7 +3718,7 @@ static void printent_long(const struct entry *ent, uint_t namecols, bool sel)
 			pair = C_UND;
 			ind1 = ind2 = '?';
 		}
-		addstr("        ");
+		addstr("              ");
 		addch(ind1);
 		break;
 	}
@@ -4578,13 +4524,13 @@ static void show_help(const char *path)
 	const char helpstr[] = {
 		"0\n"
 		"1NAVIGATION\n"
-	       "9Up k  Up%-16cPgUp ^U  Scroll up\n"
-	       "9Dn j  Down%-14cPgDn ^D  Scroll down\n"
-	       "9Lt h  Parent%-12c~ ` @ -  HOME, /, start, last\n"
-	   "5Ret Rt l  Open%-20c'  First file/match\n"
-	       "9g ^A  Top%-21c.  Toggle hidden\n"
+	       "9Up o  Up%-16cPgUp ^B  Scroll up\n"
+	       "9Dn e  Down%-14cPgDn ^F  Scroll down\n"
+	       "9Lt n  Parent%-12c~ ` @ -  HOME, /, start, last\n"
+	   "5Ret Rt    Open%-20c\"  First file/match\n"
+	       "9g     Top%-21c.  Toggle hidden\n"
 	       "9G ^E  End%-21c+  Toggle auto-advance\n"
-	       "9b ^/  Bookmark key%-12c,  Mark CWD\n"
+	       "9' ^/  Bookmark key%-12c,  Mark CWD\n"
 		"a1-4  Context 1-4%-7c(Sh)Tab  Cycle context\n"
 		"aEsc  Send to FIFO%-11c^L  Redraw\n"
 		  "cQ  Pick/err, quit%-9c^G  QuitCD\n"
@@ -4595,15 +4541,15 @@ static void show_help(const char *path)
 		"aEsc  Exit prompt%-12c^L  Clear prompt/last filter\n"
 		 "b^N  Toggle type-to-nav%-0c\n"
 		"1FILES\n"
-	       "9o ^O  Open with...%-12cn  Create new/link\n"
+	       "9O ^O  Open with...%-12cN  Create new/link\n"
 	       "9f ^F  File details%-12cd  Detail mode toggle\n"
 		 "b^R  Rename/dup%-14cr  Batch rename\n"
-		  "cz  Archive%-17ce  Edit file\n"
+		  "cz  Archive%-17cj  Edit file\n"
 		  "c*  Toggle exe%-14c>  Export list\n"
 	   "5Space ^J  (Un)select%-7cm ^Space  Mark range/clear sel\n"
-	          "ca  Select all%-14cA  Invert sel\n"
+	          "c^A Select all%-14cA  Invert sel\n"
 	       "9p ^P  Copy sel here%-8cw ^W  Cp/mv sel as\n"
-	       "9v ^V  Move sel here%-11cE  Edit sel\n"
+	       "9P ^V  Move sel here%-11cE  Edit sel\n"
 	       "9x ^X  Delete\n"
 		"1MISC\n"
 	      "8Alt ;  Select plugin%-11c=  Launch app\n"
@@ -5683,13 +5629,13 @@ static int adjust_cols(int ncols)
 {
 	/* Calculate the number of cols available to print entry name */
 	if (cfg.showdetail) {
-		/* Fallback to light mode if less than 35 columns */
-		if (ncols < 36) {
+		/* Fallback to light mode if less than 41 columns */
+		if (ncols < 42) {
 			cfg.showdetail ^= 1;
 			printptr = &printent;
 		} else {
 			/* 3 more accounted for below */
-			ncols -= 32;
+			ncols -= 41;
 		}
 	}
 

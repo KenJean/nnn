@@ -1,3 +1,12 @@
+Changed:
+
++ keybindings to fit Workman layout better
++ coolsize() to always display *exact* file sizes (i.e. to the exact byte)
+
+⇒ KJ
+
+---
+
 <h3 align="center"><img src="misc/logo/logo-128x128.png" alt="nnn"><br>nnn - <i>Supercharge your productivity!</i></h3>
 
 <p align="center">

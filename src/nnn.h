@@ -127,37 +127,37 @@ struct key {
 static struct key bindings[] = {
 	/* Back */
 	{ KEY_LEFT,       SEL_BACK },
-	{ 'h',            SEL_BACK },
+	{ 'n',            SEL_BACK },
 	/* Inside or select */
 	{ KEY_ENTER,      SEL_OPEN },
 	{ '\r',           SEL_OPEN },
 	/* Pure navigate inside */
 	{ KEY_RIGHT,      SEL_NAV_IN },
-	{ 'l',            SEL_NAV_IN },
+	{ 'i',            SEL_NAV_IN },
 	/* Next */
-	{ 'j',            SEL_NEXT },
+	{ 'e',            SEL_NEXT },
 	{ KEY_DOWN,       SEL_NEXT },
 	/* Previous */
-	{ 'k',            SEL_PREV },
+	{ 'o',            SEL_PREV },
 	{ KEY_UP,         SEL_PREV },
 	/* Page down */
 	{ KEY_NPAGE,      SEL_PGDN },
 	/* Page up */
 	{ KEY_PPAGE,      SEL_PGUP },
 	/* Ctrl+D */
-	{ CONTROL('D'),   SEL_CTRL_D },
+	{ CONTROL('F'),   SEL_CTRL_D },
 	/* Ctrl+U */
-	{ CONTROL('U'),   SEL_CTRL_U },
+	{ CONTROL('B'),   SEL_CTRL_U },
 	/* First entry */
 	{ KEY_HOME,       SEL_HOME },
 	{ 'g',            SEL_HOME },
-	{ CONTROL('A'),   SEL_HOME },
+	// { CONTROL('A'),   SEL_HOME },
 	/* Last entry */
 	{ KEY_END,        SEL_END },
 	{ 'G',            SEL_END },
 	{ CONTROL('E'),   SEL_END },
 	/* Go to first file */
-	{ '\'',           SEL_FIRST },
+	{ '"',           SEL_FIRST },
 	/* HOME */
 	{ '~',            SEL_CDHOME },
 	/* Initial directory */
@@ -167,7 +167,7 @@ static struct key bindings[] = {
 	/* Go to / */
 	{ '`',            SEL_CDROOT },
 	/* Leader key */
-	{ 'b',            SEL_BOOKMARK },
+	{ '\'',            SEL_BOOKMARK },
 	{ CONTROL('_'),   SEL_BOOKMARK },
 	/* Connect to server over SSHFS */
 	{ 'c',            SEL_REMOTE },
@@ -198,7 +198,7 @@ static struct key bindings[] = {
 	{ 'd',            SEL_DETAIL },
 	/* File details */
 	{ 'f',            SEL_STATS },
-	{ CONTROL('F'),   SEL_STATS },
+	// { CONTROL('F'),   SEL_STATS },
 	/* Toggle executable status */
 	{ '*',            SEL_CHMODX },
 	/* Create archive */
@@ -215,7 +215,7 @@ static struct key bindings[] = {
 	{ 'm',            SEL_SELMUL },
 	{ CONTROL(' '),   SEL_SELMUL },
 	/* Select all files in current dir */
-	{ 'a',            SEL_SELALL },
+	{ CONTROL('A'),   SEL_SELALL },
 	/* Invert selection in current dir */
 	{ 'A',            SEL_SELINV },
 	/* List, edit selection */
@@ -224,7 +224,7 @@ static struct key bindings[] = {
 	{ 'p',            SEL_CP },
 	{ CONTROL('P'),   SEL_CP },
 	/* Move from selection buffer */
-	{ 'v',            SEL_MV },
+	{ 'P',            SEL_MV },
 	{ CONTROL('V'),   SEL_MV },
 	/* Copy/move from selection buffer and rename */
 	{ 'w',            SEL_CPMVAS },
@@ -233,10 +233,10 @@ static struct key bindings[] = {
 	{ 'x',            SEL_RM },
 	{ CONTROL('X'),   SEL_RM },
 	/* Open in a custom application */
-	{ 'o',            SEL_OPENWITH },
+	{ 'O',            SEL_OPENWITH },
 	{ CONTROL('O'),   SEL_OPENWITH },
 	/* Create a new file */
-	{ 'n',            SEL_NEW },
+	{ 'N',            SEL_NEW },
 	/* Show rename prompt */
 	{ CONTROL('R'),   SEL_RENAME },
 	/* Rename contents of current dir */
@@ -248,7 +248,7 @@ static struct key bindings[] = {
 	/* Quit a context */
 	{ '+',            SEL_AUTONEXT },
 	/* Edit in EDITOR */
-	{ 'e',            SEL_EDIT },
+	{ 'j',            SEL_EDIT },
 	/* Run a plugin */
 	{ ';',            SEL_PLUGIN },
 	/* Run command */
