@@ -659,8 +659,8 @@ static const char * const envs[] = {
 #define T_MOD 2
 
 #ifdef __linux__
-static char cp[] = "cp   -iRp";
-static char mv[] = "mv   -i";
+static char cp[] = "cp   -gavb";
+static char mv[] = "mv   -gvb";
 #else
 static char cp[] = "cp -iRp";
 static char mv[] = "mv -i";
