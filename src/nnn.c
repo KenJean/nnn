@@ -4383,7 +4383,7 @@ static bool remote_mount(char *newpath)
  */
 static bool unmount(char *name, char *newpath, int *presel, char *currentpath)
 {
-#ifdef __APPLE__
+#if defined (__APPLE__) || defined (__FreeBSD__)
 	static char cmd[] = "umount";
 #else
 	static char cmd[] = "fusermount3"; /* Arch Linux utility */
@@ -4396,7 +4396,7 @@ static bool unmount(char *name, char *newpath, int *presel, char *currentpath)
 	bool hovered = TRUE;
 	char mntpath[PATH_MAX];
 
-#ifndef __APPLE__
+#if !defined ( __APPLE__) && !defined (__FreeBSD__)
 	/* On Ubuntu it's fusermount */
 	if (!found && !getutil(cmd)) {
 		cmd[10] = '\0';
@@ -4430,7 +4430,7 @@ static bool unmount(char *name, char *newpath, int *presel, char *currentpath)
 		return FALSE;
 	}
 
-#ifdef __APPLE__
+#if defined (__APPLE__) || defined (__FreeBSD__)
 	if (spawn(cmd, newpath, NULL, F_NORMAL)) {
 #else
 	if (spawn(cmd, "-u", newpath, F_NORMAL)) {
@@ -4440,6 +4440,8 @@ static bool unmount(char *name, char *newpath, int *presel, char *currentpath)
 
 #ifdef __APPLE__
 		if (spawn(cmd, "-l", newpath, F_NORMAL)) {
+#elif defined (__FreeBSD__)
+		if (spawn(cmd, "-f", newpath, F_NORMAL)) {
 #else
 		if (spawn(cmd, "-uz", newpath, F_NORMAL)) {
 #endif
