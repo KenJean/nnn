@@ -6199,7 +6199,6 @@ nochange:
 					if (runfile[0])
 						runfile[0] = '\0';
 					clearfilter();
-					clearselection();
 					setdirwatch();
 					goto begin;
 				}
@@ -6933,8 +6932,6 @@ nochange:
 					printwait(messages[MSG_FAILED], &presel);
 					goto nochange;
 				}
-
-				clearselection();
 
 				if (ndents)
 					copycurname();
