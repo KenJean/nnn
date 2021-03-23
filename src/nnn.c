@@ -7533,6 +7533,8 @@ static bool set_tmp_path(void)
 
 static void cleanup(void)
 {
+	printf("\033[23;0t"); /* reset terminal window title */
+	fflush(stdout);
 	free(selpath);
 	free(plgpath);
 	free(cfgpath);
@@ -7946,6 +7948,10 @@ int main(int argc, char *argv[])
 		read_history(g_buf);
 	}
 #endif
+
+	/* Save terminal window title */
+	printf("\033[22;0t");
+	fflush(stdout);
 
 #ifndef NOMOUSE
 	if (!initcurses(&mask))
