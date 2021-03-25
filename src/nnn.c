@@ -5939,9 +5939,11 @@ begin:
 		setdirwatch();
 	}
 
-	/* Set terminal window title */
-	printf("\033]2;%s (%s)\007", xbasename(path), path);
-	fflush(stdout);
+	if (!g_state.picker) {
+		/* Set terminal window title */
+		printf("\033]2;%s (%s)\007", xbasename(path), path);
+		fflush(stdout);
+	}
 
 	if (g_state.selmode && lastdir[0])
 		lastappendpos = selbufpos;
@@ -7533,8 +7535,10 @@ static bool set_tmp_path(void)
 
 static void cleanup(void)
 {
-	printf("\033[23;0t"); /* reset terminal window title */
-	fflush(stdout);
+	if (!g_state.picker) {
+		printf("\033[23;0t"); /* reset terminal window title */
+		fflush(stdout);
+	}
 	free(selpath);
 	free(plgpath);
 	free(cfgpath);
@@ -7949,9 +7953,11 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	/* Save terminal window title */
-	printf("\033[22;0t");
-	fflush(stdout);
+	if (!g_state.picker) {
+		/* Save terminal window title */
+		printf("\033[22;0t");
+		fflush(stdout);
+	}
 
 #ifndef NOMOUSE
 	if (!initcurses(&mask))
