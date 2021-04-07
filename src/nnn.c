@@ -3421,6 +3421,24 @@ static char *unescape(const char *str, uint_t maxcols)
 }
 #endif
 
+static off_t get_size(off_t size, off_t *pval, uint_t comp)
+{
+	off_t rem = *pval;
+	off_t quo = rem / 10;
+
+	if ((rem - (quo * 10)) >= 5) {
+		rem = quo + 1;
+		if (rem == comp) {
+			++size;
+			rem = 0;
+		}
+	} else
+		rem = quo;
+
+	*pval = rem;
+	return size;
+}
+
 static char *coolsize(off_t size)
 {
     int c;
@@ -3664,7 +3682,6 @@ static void printent(const struct entry *ent, uint_t namecols, bool sel)
 		attrs |= A_REVERSE;
 	if (attrs)
 		attron(attrs);
-
 	if (!ind)
 		++namecols;
 
@@ -5636,7 +5653,7 @@ static void draw_line(char *path, int ncols)
 	}
 
 	move(2 + last - curscroll, 0);
-	printptr(&pdents[last], ncols, false);
+	printptr(&pdents[last], ncols, FALSE);
 
 	if (g_state.oldcolor && (pdents[cur].flags & DIR_OR_LINK_TO_DIR)) {
 		if (!dir)  {/* First file is not a directory */
@@ -5649,7 +5666,7 @@ static void draw_line(char *path, int ncols)
 	}
 
 	move(2 + cur - curscroll, 0);
-	printptr(&pdents[cur], ncols, true);
+	printptr(&pdents[cur], ncols, TRUE);
 
 	/* Must reset e.g. no files in dir */
 	if (dir)
