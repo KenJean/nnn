@@ -3423,23 +3423,23 @@ static char *unescape(const char *str, uint_t maxcols)
 }
 #endif
 
-static off_t get_size(off_t size, off_t *pval, uint_t comp)
-{
-	off_t rem = *pval;
-	off_t quo = rem / 10;
-
-	if ((rem - (quo * 10)) >= 5) {
-		rem = quo + 1;
-		if (rem == comp) {
-			++size;
-			rem = 0;
-		}
-	} else
-		rem = quo;
-
-	*pval = rem;
-	return size;
-}
+// static off_t get_size(off_t size, off_t *pval, uint_t comp)
+// {
+// 	off_t rem = *pval;
+// 	off_t quo = rem / 10;
+//
+// 	if ((rem - (quo * 10)) >= 5) {
+// 		rem = quo + 1;
+// 		if (rem == comp) {
+// 			++size;
+// 			rem = 0;
+// 		}
+// 	} else
+// 		rem = quo;
+//
+// 	*pval = rem;
+// 	return size;
+// }
 
 static char *coolsize(off_t size)
 {
@@ -3697,9 +3697,9 @@ static void print_details(const struct entry *ent)
 	if (entry_type == S_IFREG || entry_type == S_IFDIR) {
 		char *size = coolsize(cfg.blkorder ? ent->blocks << blk_shift : ent->size);
 
-		printw("%*c%s", 9 - (uint_t)xstrlen(size), ' ', size);
+		printw("%*c%s", 16 - (uint_t)xstrlen(size), ' ', size);
 	} else
-		printw("%*c%c", 8, ' ', get_detail_ind(ent->mode));
+		printw("%*c%c", 15, ' ', get_detail_ind(ent->mode));
 }
 
 static void printent_long(const struct entry *ent, uint_t namecols, bool sel)
@@ -5620,12 +5620,12 @@ static int adjust_cols(int n)
 	/* Calculate the number of cols available to print entry name */
 	if (cfg.showdetail) {
 		/* Fallback to light mode if less than 41 columns */
-		if (ncols < 42) {
+		if (n < 42) {
 			cfg.showdetail ^= 1;
 			printptr = &printent;
 		} else {
 			/* 3 more accounted for below */
-			ncols -= 41;
+			n -= 41;
 		}
 	}
 
