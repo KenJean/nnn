@@ -14,7 +14,7 @@ CFLAGS_OPTIMIZATION ?= -O3
 O_DEBUG := 0  # debug binary
 O_NORL := 0  # no readline support
 O_PCRE := 0  # link with PCRE library
-O_NOLOC := 0  # no locale support
+O_NOLC := 0  # no locale support
 O_NOMOUSE := 0  # no mouse support
 O_NOBATCH := 0  # no built-in batch renamer
 O_NOFIFO := 0  # no FIFO previewer support
@@ -25,8 +25,15 @@ O_QSORT := 0  # use Alexey Tourbin's QSORT implementation
 O_BENCH := 0  # benchmark mode (stops at first user input)
 O_NOSSN := 0  # enable session support
 O_NOUG := 0  # disable user, group name in status bar
-O_CKBOARD := 0  # use checker board (stipple) in detail mode
 O_NOX11 := 0  # disable X11 integration
+
+# User patches
+O_GITSTATUS := 0 # add git status to detail view
+O_NAMEFIRST := 0 # print file name first, add uid and guid to detail view
+
+ifeq ($(strip $(O_GITSTATUS)),1)
+	LDLIBS += -lgit2
+endif
 
 # convert targets to flags for backwards compatibility
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
@@ -35,13 +42,13 @@ endif
 ifneq ($(filter norl,$(MAKECMDGOALS)),)
 	O_NORL := 1
 endif
-ifneq ($(filter noloc,$(MAKECMDGOALS)),)
+ifneq ($(filter nolc,$(MAKECMDGOALS)),)
 	O_NORL := 1
-	O_NOLOC := 1
+	O_NOLC := 1
 endif
 
 ifeq ($(strip $(O_DEBUG)),1)
-	CPPFLAGS += -DDBGMODE
+	CPPFLAGS += -DDEBUG
 	CFLAGS += -g
 endif
 
@@ -58,8 +65,14 @@ ifeq ($(strip $(O_PCRE)),1)
 	LDLIBS += -lpcre
 endif
 
-ifeq ($(strip $(O_NOLOC)),1)
-	CPPFLAGS += -DNOLOCALE
+ifeq ($(strip $(O_NOLC)),1)
+	ifeq ($(strip $(O_ICONS)),1)
+$(info *** Ignoring O_NOLC since O_ICONS is set ***)
+	else ifeq ($(strip $(O_NERD)),1)
+$(info *** Ignoring O_NOLC since O_NERD is set ***)
+	else
+		CPPFLAGS += -DNOLC
+	endif
 endif
 
 ifeq ($(strip $(O_NOMOUSE)),1)
@@ -102,10 +115,6 @@ ifeq ($(strip $(O_NOUG)),1)
 	CPPFLAGS += -DNOUG
 endif
 
-ifeq ($(strip $(O_CKBOARD)),1)
-	CPPFLAGS += -DCKBOARD
-endif
-
 ifeq ($(strip $(O_NOX11)),1)
 	CPPFLAGS += -DNOX11
 endif
@@ -124,7 +133,7 @@ CFLAGS += -std=c11 -Wall -Wextra -Wshadow
 CFLAGS += $(CFLAGS_OPTIMIZATION)
 CFLAGS += $(CFLAGS_CURSES)
 
-LDLIBS += $(LDLIBS_CURSES)
+LDLIBS += $(LDLIBS_CURSES) -lpthread
 
 # static compilation needs libgpm development package
 ifeq ($(strip $(O_STATIC)),1)
@@ -140,15 +149,20 @@ DESKTOPFILE = misc/desktop/nnn.desktop
 LOGOSVG = misc/logo/logo.svg
 LOGO64X64 = misc/logo/logo-64x64.png
 
+GITSTATUS = patches/gitstatus
+NAMEFIRST = patches/namefirst
+
 all: $(BIN)
 
 $(BIN): $(SRC) $(HEADERS)
+	@$(MAKE) --silent prepatch
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+	@$(MAKE) --silent postpatch
 
 # targets for backwards compatibility
 debug: $(BIN)
 norl: $(BIN)
-noloc: $(BIN)
+nolc: $(BIN)
 
 install-desktop: $(DESKTOPFILE)
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(DESKTOPPREFIX)
@@ -191,6 +205,11 @@ static:
 	make O_STATIC=1 O_NERD=1 strip
 	mv $(BIN) $(BIN)-nerd-static
 
+musl:
+	cp misc/musl/musl-static-ubuntu.sh .
+	./musl-static-ubuntu.sh 1
+	rm ./musl-static-ubuntu.sh
+
 dist:
 	mkdir -p nnn-$(VERSION)
 	$(CP) -r $(DISTFILES) nnn-$(VERSION)
@@ -202,23 +221,23 @@ sign:
 	gpg --detach-sign --yes nnn-$(VERSION).tar.gz
 	rm -f nnn-$(VERSION).tar.gz
 
-upload-local: sign static
+upload-local: sign static musl
 	$(eval ID=$(shell curl -s 'https://api.github.com/repos/jarun/nnn/releases/tags/v$(VERSION)' | jq .id))
 	# upload sign file
 	curl -XPOST 'https://uploads.github.com/repos/jarun/nnn/releases/$(ID)/assets?name=nnn-$(VERSION).tar.gz.sig' \
 	    -H 'Authorization: token $(NNN_SIG_UPLOAD_TOKEN)' -H 'Content-Type: application/pgp-signature' \
 	    --upload-file nnn-$(VERSION).tar.gz.sig
-	tar -zcf $(BIN)-static-$(VERSION).x86_64.tar.gz $(BIN)-static
 	# upx compress all static binaries
 	upx -qqq $(BIN)-static
 	upx -qqq $(BIN)-icons-static
 	upx -qqq $(BIN)-nerd-static
 	# upload static binary
+	tar -zcf $(BIN)-static-$(VERSION).x86_64.tar.gz $(BIN)-static
 	curl -XPOST 'https://uploads.github.com/repos/jarun/nnn/releases/$(ID)/assets?name=$(BIN)-static-$(VERSION).x86_64.tar.gz' \
 	    -H 'Authorization: token $(NNN_SIG_UPLOAD_TOKEN)' -H 'Content-Type: application/x-sharedlib' \
 	    --upload-file $(BIN)-static-$(VERSION).x86_64.tar.gz
-	tar -zcf $(BIN)-icons-static-$(VERSION).x86_64.tar.gz $(BIN)-icons-static
 	# upload icons-in-terminal compiled static binary
+	tar -zcf $(BIN)-icons-static-$(VERSION).x86_64.tar.gz $(BIN)-icons-static
 	curl -XPOST 'https://uploads.github.com/repos/jarun/nnn/releases/$(ID)/assets?name=$(BIN)-icons-static-$(VERSION).x86_64.tar.gz' \
 	    -H 'Authorization: token $(NNN_SIG_UPLOAD_TOKEN)' -H 'Content-Type: application/x-sharedlib' \
 	    --upload-file $(BIN)-icons-static-$(VERSION).x86_64.tar.gz
@@ -227,9 +246,34 @@ upload-local: sign static
 	curl -XPOST 'https://uploads.github.com/repos/jarun/nnn/releases/$(ID)/assets?name=$(BIN)-nerd-static-$(VERSION).x86_64.tar.gz' \
 	    -H 'Authorization: token $(NNN_SIG_UPLOAD_TOKEN)' -H 'Content-Type: application/x-sharedlib' \
 	    --upload-file $(BIN)-nerd-static-$(VERSION).x86_64.tar.gz
+	# upload musl static binary
+	tar -zcf $(BIN)-musl-static-$(VERSION).x86_64.tar.gz $(BIN)-musl-static
+	curl -XPOST 'https://uploads.github.com/repos/jarun/nnn/releases/$(ID)/assets?name=$(BIN)-musl-static-$(VERSION).x86_64.tar.gz' \
+	    -H 'Authorization: token $(NNN_SIG_UPLOAD_TOKEN)' -H 'Content-Type: application/x-sharedlib' \
+	    --upload-file $(BIN)-musl-static-$(VERSION).x86_64.tar.gz
 
 clean:
-	$(RM) -f $(BIN) nnn-$(VERSION).tar.gz *.sig $(BIN)-static $(BIN)-static-$(VERSION).x86_64.tar.gz $(BIN)-icons-static $(BIN)-icons-static-$(VERSION).x86_64.tar.gz $(BIN)-nerd-static $(BIN)-nerd-static-$(VERSION).x86_64.tar.gz
+	$(RM) -f $(BIN) nnn-$(VERSION).tar.gz *.sig $(BIN)-static $(BIN)-static-$(VERSION).x86_64.tar.gz $(BIN)-icons-static $(BIN)-icons-static-$(VERSION).x86_64.tar.gz $(BIN)-nerd-static $(BIN)-nerd-static-$(VERSION).x86_64.tar.gz $(BIN)-musl-static $(BIN)-musl-static-$(VERSION).x86_64.tar.gz
+
+prepatch:
+ifeq ($(strip $(O_NAMEFIRST)),1)
+	patch --forward --strip=1 --input=$(NAMEFIRST)/mainline.diff
+ifeq ($(strip $(O_GITSTATUS)),1)
+	patch --forward --strip=1 --input=$(GITSTATUS)/namefirst.diff
+endif
+else ifeq ($(strip $(O_GITSTATUS)),1)
+	patch --forward --strip=1 --input=$(GITSTATUS)/mainline.diff
+endif
+
+postpatch:
+ifeq ($(strip $(O_NAMEFIRST)),1)
+ifeq ($(strip $(O_GITSTATUS)),1)
+	patch --reverse --strip=1 --input=$(GITSTATUS)/namefirst.diff
+endif
+	patch --reverse --strip=1 --input=$(NAMEFIRST)/mainline.diff
+else ifeq ($(strip $(O_GITSTATUS)),1)
+	patch --reverse --strip=1 --input=$(GITSTATUS)/mainline.diff
+endif
 
 skip: ;
 
